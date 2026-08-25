@@ -1,0 +1,38 @@
+{
+  "asset": "BeyondTree_LOD0",
+  "version": "v0.1 research",
+  "dimensions_m": [
+    6.3,
+    6.0,
+    9.0
+  ],
+  "nodes": [
+    "Tree_Root",
+    "Trunk",
+    "Branch_Main",
+    "Branch_Secondary",
+    "Leaves",
+    "Wind_Data"
+  ],
+  "triangles_by_node": {
+    "Trunk": 304,
+    "Branch_Main": 576,
+    "Branch_Secondary": 1836,
+    "Leaves": 3034
+  },
+  "triangles_total": 5750,
+  "materials": [
+    "Bark_Rough_Oak",
+    "Bark_Young_Branch",
+    "Leaf_Green_Deep",
+    "Leaf_Green",
+    "Leaf_YellowGreen",
+    "Leaf_Ochre",
+    "Leaf_DarkGold"
+  ],
+  "material_count": 7,
+  "texture_count": 0,
+  "texture_note": "v0.1 uses procedural/material color only; no external textures",
+  "leaf_method": "single batched mesh of low-poly cards; double-sided at runtime recommended",
+  "wind_plan": "future COLOR_0 flexibility and phase channels; Wind_Data placeholder preserved"
+}

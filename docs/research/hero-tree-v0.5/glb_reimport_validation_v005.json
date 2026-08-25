@@ -1,0 +1,19 @@
+{
+  "imported_object_count": 4,
+  "mesh_objects": [
+    "Bark_Growth_LOD0.001",
+    "Leaves.001"
+  ],
+  "triangles": {
+    "bark": 15954,
+    "leaves": 3968,
+    "total": 19922
+  },
+  "materials": [
+    "MAT_Bark.001",
+    "MAT_Leaves.001"
+  ],
+  "bark_boundary_or_nonmanifold_edges_after_seam_weld": 0,
+  "leaf_has_uv": true,
+  "result": "PASS"
+}

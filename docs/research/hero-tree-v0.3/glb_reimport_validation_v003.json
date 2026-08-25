@@ -1,0 +1,44 @@
+{
+  "imported_object_count": 11,
+  "leaf_object": "Leaves.001",
+  "leaf_vertices": 6069,
+  "leaf_triangles": 3968,
+  "leaf_attributes": [
+    ".select_vert",
+    "position",
+    ".corner_vert",
+    ".corner_edge",
+    ".select_poly",
+    "UVMap",
+    "material_index",
+    "sharp_face",
+    ".edge_verts",
+    ".select_edge",
+    "custom_normal",
+    "sharp_edge"
+  ],
+  "has_color_attribute": false,
+  "has_uv": true,
+  "uv_range": {
+    "u": [
+      0.0,
+      1.0
+    ],
+    "v": [
+      0.0,
+      1.0
+    ]
+  },
+  "material": "MAT_Leaves.001",
+  "image_textures": [
+    {
+      "node": "Image Texture",
+      "image": "leaves_palette_rgba_2048x512",
+      "size": [
+        2048,
+        512
+      ]
+    }
+  ],
+  "result": "PASS"
+}

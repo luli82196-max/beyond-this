@@ -1,0 +1,42 @@
+{
+  "phase": "11.5.2",
+  "source": "BeyondTree_v005.blend",
+  "method": "continuous sampled-Bezier sweeps with shared cross-section rings and explicit closed caps; no voxel remesh, decimation, or Boolean repair; leaf cards regenerated at supported branch terminals",
+  "growth_paths": {
+    "trunk": 1,
+    "primary": 10,
+    "secondary": 18
+  },
+  "triangles_total": 7164,
+  "triangles_by_object": {
+    "Bark_CurveGrowth_LOD0": 5292,
+    "Leaves": 1872,
+    "Wind_Data": 0
+  },
+  "leaf_cards": 936,
+  "bark_boundary_or_nonmanifold_edges": 0,
+  "bark_connected_components": 29,
+  "component_strategy": "29 individually closed overlapping growth segments; junction overlap is retained instead of voxel fusion to preserve smooth curvature",
+  "materials": [
+    "MAT_Bark",
+    "MAT_Leaves"
+  ],
+  "material_count": 2,
+  "texture_changes": "none; existing 1K bark channels and initial-autumn leaf palette retained",
+  "glb_size_bytes": 387004,
+  "blend_size_bytes": 277623,
+  "render_files": {
+    "forest_human_eye": "forest_camera_test/forest_human_eye.png",
+    "forest_canopy_lift": "forest_camera_test/forest_canopy_lift.png",
+    "tree_entry_continuity": "tree_camera_test/tree_entry_continuity.png",
+    "tree_returned_silhouette": "tree_camera_test/tree_returned_silhouette.png",
+    "tree_close_camera_test": "tree_close_camera_test/tree_close_camera_test.png"
+  },
+  "limits": [
+    "research only",
+    "no production integration",
+    "no Three.js",
+    "no LOD/KTX2",
+    "no Seed/Room/Light/sound changes"
+  ]
+}

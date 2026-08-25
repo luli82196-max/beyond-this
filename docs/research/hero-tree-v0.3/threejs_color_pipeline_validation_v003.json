@@ -1,0 +1,19 @@
+{
+  "threeRevision": "179",
+  "loader": "GLTFLoader",
+  "leafObject": "Leaves",
+  "materialType": "MeshStandardMaterial",
+  "map": true,
+  "mapSize": [
+    2048,
+    512
+  ],
+  "vertexColors": false,
+  "transparent": true,
+  "alphaTest": 0,
+  "side": 2,
+  "uv": true,
+  "colorAttribute": false,
+  "triangles": 3968,
+  "result": "PASS"
+}

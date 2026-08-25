@@ -1,0 +1,110 @@
+{
+  "asset": "BeyondTree_LOD0_v002",
+  "version": "v0.2 research",
+  "source_v0_1": "D:\\新的尝试\\Beyond_This\\docs\\research\\hero-tree-v0.1\\BeyondTree_v001.blend",
+  "triangles_by_node": {
+    "Branch_Main": 576,
+    "Branch_Secondary": 1836,
+    "Junction_01": 120,
+    "Junction_02": 120,
+    "Junction_03": 120,
+    "Junction_04": 120,
+    "Junction_05": 120,
+    "Leaves": 4960,
+    "Trunk": 304,
+    "Wind_Data": 0
+  },
+  "triangles_total": 8276,
+  "material_count": 2,
+  "materials": [
+    "MAT_Bark",
+    "MAT_Leaves"
+  ],
+  "textures": [
+    {
+      "file": "textures/bark_basecolor_1k.png",
+      "size": "1024x1024",
+      "format": "PNG RGBA"
+    },
+    {
+      "file": "textures/bark_normal_1k.png",
+      "size": "1024x1024",
+      "format": "PNG RGBA"
+    },
+    {
+      "file": "textures/bark_roughness_1k.png",
+      "size": "1024x1024",
+      "format": "PNG RGBA"
+    },
+    {
+      "file": "textures/leaves_rgba_512.png",
+      "size": "512x512",
+      "format": "PNG RGBA"
+    }
+  ],
+  "alpha": "RGBA leaf atlas; Blender DITHERED preview; WebGL recommendation alphaTest=0.5, depthWrite=true, DoubleSide",
+  "review_cameras": {
+    "forest_human_eye": {
+      "position_blender_xyz": [
+        0,
+        -7.3,
+        1.15
+      ],
+      "source_threejs_position": [
+        0,
+        1.15,
+        7.3
+      ],
+      "lens_mm": 48
+    },
+    "forest_canopy_lift": {
+      "position_blender_xyz": [
+        0,
+        -6.48,
+        3.3
+      ],
+      "source_threejs_position": [
+        0,
+        3.3,
+        6.48
+      ],
+      "lens_mm": 50
+    },
+    "tree_entry_continuity": {
+      "position_blender_xyz": [
+        0,
+        -6.48,
+        3.3
+      ],
+      "source_threejs_position": [
+        0,
+        3.3,
+        6.48
+      ],
+      "lens_mm": 50
+    },
+    "tree_returned_silhouette": {
+      "position_blender_xyz": [
+        0,
+        -7.3,
+        1.14
+      ],
+      "source_threejs_position": [
+        0,
+        1.14,
+        7.3
+      ],
+      "lens_mm": 52
+    }
+  },
+  "files": {
+    "blend": "D:\\新的尝试\\Beyond_This\\docs\\research\\hero-tree-v0.2\\BeyondTree_v002.blend",
+    "glb": "D:\\新的尝试\\Beyond_This\\docs\\research\\hero-tree-v0.2\\BeyondTree_LOD0_v002.glb",
+    "renders": "D:\\新的尝试\\Beyond_This\\docs\\research\\hero-tree-v0.2\\hero-tree-test"
+  },
+  "dimensions_m_xyz": [
+    6.895,
+    5.111,
+    9.084
+  ]
+}

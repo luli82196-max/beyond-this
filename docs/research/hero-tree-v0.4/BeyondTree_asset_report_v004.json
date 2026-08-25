@@ -1,0 +1,53 @@
+{
+  "phase": "11.5",
+  "source": "BeyondTree_v003.blend",
+  "method": "sequential exact boolean unions on authored bark volumes + restrained angle bevel + unified UV unwrap",
+  "target_junctions": [
+    "trunk_to_primary",
+    "primary_to_secondary"
+  ],
+  "true_shared_topology": true,
+  "bark_boundary_or_nonmanifold_edges": 0,
+  "bark_connected_components": 3,
+  "boolean_failures": [],
+  "triangles_total": 17086,
+  "triangles_by_object": {
+    "Bark_Fused_LOD0": 13118,
+    "Leaves": 3968,
+    "Wind_Data": 0
+  },
+  "materials": [
+    "MAT_Bark",
+    "MAT_Leaves"
+  ],
+  "material_count": 2,
+  "texture_changes": "none; v003 bark 1K channels and 2048x512 leaf atlas retained; bark UV re-unwrapped for fused topology",
+  "textures": [
+    "bark_basecolor_1k.png",
+    "bark_normal_1k.png",
+    "bark_roughness_1k.png",
+    "leaves_palette_rgba_2048x512.png"
+  ],
+  "glb_size_bytes": 684488,
+  "blend_size_bytes": 613911,
+  "mesh_changes": [
+    "intersecting bark volumes combined by exact surface union",
+    "two target forks share topology where their source volumes intersect",
+    "angle-limited micro-bevel reduces mechanical radial facets without subdivision",
+    "restrained lower-trunk pressure variation",
+    "new unified bark UV chart"
+  ],
+  "render_files": {
+    "forest_human_eye": "forest_camera_test\\forest_human_eye.png",
+    "forest_canopy_lift": "forest_camera_test\\forest_canopy_lift.png",
+    "tree_entry_continuity": "tree_camera_test\\tree_entry_continuity.png",
+    "tree_returned_silhouette": "tree_camera_test\\tree_returned_silhouette.png",
+    "tree_close_camera_test": "tree_close_camera_test\\tree_close_camera_test.png"
+  },
+  "limits": [
+    "no LOD1/LOD2",
+    "no KTX2",
+    "no production integration",
+    "no Seed/Room/Light/sound changes"
+  ]
+}
