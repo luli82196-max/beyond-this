@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { ForestFrame } from './forest.types'
+import { createBarkTexture, WOOD_CONTINUITY } from '../materialContinuity'
 
 type Props = { frame: ForestFrame; reduced: boolean }
 type Point = [number, number, number]
@@ -10,22 +11,6 @@ type FoliageDatum = { position: Point; scale: Point; rotation: Point; color: THR
 
 const seededRandom = (seed: number) => { let value = seed; return () => ((value = value * 16807 % 2147483647) - 1) / 2147483646 }
 const leafPalette = ['#596044', '#69704c', '#77734b', '#81744b', '#8c794c', '#6c6240']
-
-function createBarkTexture(size: number, bump = false) {
-  const random = seededRandom(bump ? 782 : 621), data = new Uint8Array(size * size * 4)
-  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const i = (y * size + x) * 4
-    const furrow = Math.abs(Math.sin(x * .21 + Math.sin(y * .041) * 2.2)) ** 10
-    const fissure = Math.abs(Math.sin(x * .73 + y * .018 + Math.sin(y * .09))) ** 18
-    const value = THREE.MathUtils.clamp((bump ? 142 : 126) + Math.sin(y * .055 + Math.sin(x * .08)) * 7 + (random() - .5) * 20 - furrow * 52 - fissure * 25, 22, 210)
-    data.set(bump ? [value, value, value, 255] : [value * .9, value * .78, value * .62, 255], i)
-  }
-  const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
-  texture.colorSpace = bump ? THREE.NoColorSpace : THREE.SRGBColorSpace
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(3.2, 7.5); texture.anisotropy = 4; texture.needsUpdate = true
-  return texture
-}
 
 function createGrowthGeometry(path: GrowthPath) {
   const curve = new THREE.CatmullRomCurve3(path.points.map(point => new THREE.Vector3(...point)), false, 'centripetal', .42)
@@ -61,7 +46,7 @@ const clusterAnchors: Point[] = [[-2.05, 3.25, -.15], [-1.66, 3.72, .35], [-1.9,
 
 function BarkSystem() {
   const maps = useMemo(() => ({ color: createBarkTexture(192), bump: createBarkTexture(192, true) }), [])
-  const material = useMemo(() => new THREE.MeshStandardMaterial({ color: '#b39a78', map: maps.color, bumpMap: maps.bump, bumpScale: .105, roughness: .93 }), [maps])
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ color: WOOD_CONTINUITY.barkBase, map: maps.color, bumpMap: maps.bump, bumpScale: WOOD_CONTINUITY.barkBumpScale, roughness: WOOD_CONTINUITY.barkRoughness }), [maps])
   const paths = useMemo(() => growthPaths.map(path => createGrowthGeometry(path)), [])
   useEffect(() => () => { paths.forEach(geometry => geometry.dispose()); material.dispose(); maps.color.dispose(); maps.bump.dispose() }, [maps, material, paths])
   return <group>

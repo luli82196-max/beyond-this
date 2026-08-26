@@ -12,21 +12,22 @@ import ProjectionMinimalVisual from './ProjectionMinimalVisual'
 import { createRoomProjectionRuntimeInteractionConnection } from './roomProjectionRuntimeInteractionConnection'
 import type { RoomProjectionRuntimeOutput } from './roomProjectionRuntimeOutput'
 import type { MediaElementLike } from '../../content'
+import { createWorkedWoodTexture, WOOD_CONTINUITY } from '../materialContinuity'
 
 type Props = { frame: RoomFrame; reduced: boolean; pointer: RefObject<NormalizedPointer> }
 const seededRandom = (seed: number) => { let value = seed; return () => ((value = value * 16807 % 2147483647) - 1) / 2147483646 }
 
-function surfaceTexture(kind: 'wood' | 'wall' | 'paper') {
-  const size = 128, random = seededRandom(kind === 'wood' ? 417 : kind === 'wall' ? 631 : 947), data = new Uint8Array(size * size * 4)
+function surfaceTexture(kind: 'wall' | 'paper') {
+  const size = 128, random = seededRandom(kind === 'wall' ? 631 : 947), data = new Uint8Array(size * size * 4)
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const i = (y * size + x) * 4
-    const grain = kind === 'wood' ? Math.sin(y * .35 + Math.sin(x * .045) * 2.2) * 20 + Math.sin(y * .08) * 9 : kind === 'wall' ? Math.sin(x * .13) * Math.sin(y * .11) * 11 : Math.sin(y * .55 + x * .025) * 5
-    const base = kind === 'wood' ? 124 : kind === 'wall' ? 172 : 206
+    const grain = kind === 'wall' ? Math.sin(x * .13) * Math.sin(y * .11) * 11 : Math.sin(y * .55 + x * .025) * 5
+    const base = kind === 'wall' ? 172 : 206
     const value = THREE.MathUtils.clamp(base + grain + (random() - .5) * (kind === 'paper' ? 12 : 22), 36, 235)
     data.set([value, value, value, 255], i)
   }
   const map = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
-  map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(kind === 'wood' ? 1.4 : 4, kind === 'wood' ? 7 : 3); map.anisotropy = 4; map.needsUpdate = true
+  map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(4, 3); map.anisotropy = 4; map.needsUpdate = true
   return map
 }
 
@@ -57,7 +58,7 @@ function Projection({ attention, output, mediaElement }: { attention: number; ou
 function RoomWorld({ frame, reduced, pointer }: Props) {
   const curtain = useRef<THREE.Mesh>(null), dust = useRef<THREE.Points>(null)
   const activeSurface = useRef<'book' | 'process' | 'projection' | null>(null)
-  const maps = useMemo(() => ({ wood: surfaceTexture('wood'), wall: surfaceTexture('wall'), paper: surfaceTexture('paper') }), [])
+  const maps = useMemo(() => ({ wood: createWorkedWoodTexture(), wall: surfaceTexture('wall'), paper: surfaceTexture('paper') }), [])
   useEffect(() => () => Object.values(maps).forEach((map) => map.dispose()), [maps])
   const bookRuntime = useMemo(createRoomBookRuntimeInteractionConnection, [])
   const processRuntime = useMemo(createRoomProcessRuntimeInteractionConnection, [])
@@ -114,7 +115,7 @@ function RoomWorld({ frame, reduced, pointer }: Props) {
     if (curtain.current && !reduced) curtain.current.rotation.y = -.08 + Math.sin(clock.elapsedTime * .3) * .015 * frame.curtainDrift
     if (dust.current && !reduced) dust.current.rotation.y = Math.sin(clock.elapsedTime * .06) * .025
   })
-  const woodMaterial = <meshStandardMaterial color="#735438" map={maps.wood} bumpMap={maps.wood} bumpScale={.028} roughness={.9} />
+  const woodMaterial = <meshStandardMaterial color={WOOD_CONTINUITY.roomWoodTarget} map={maps.wood} bumpMap={maps.wood} bumpScale={.024} roughness={WOOD_CONTINUITY.roomWoodRoughness} />
   return <>
     <fog attach="fog" args={['#4b4137', 6.2, 12.4]} /><hemisphereLight args={['#a99d88', '#30251e', .3]} />
     <directionalLight position={[-4.5, 4.8, 4]} intensity={1.35 * frame.naturalLight} color="#d2a46d" /><pointLight position={[2.15, 2.55, .2]} intensity={frame.artificialLight * .78} distance={5} color="#d59b59" />
