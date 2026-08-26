@@ -6,7 +6,7 @@ export const experienceLoaders = {
   room: () => import('./room/RoomExperience'), light: () => import('./light/LightExperience'),
 } as const
 export const sceneLoaders = {
-  seed: () => import('./seed/SeedScene'), forest: () => import('./forest/ForestScene'), tree: () => import('./tree/TreeScene'),
+  seed: () => import('./seed/SeedScene'), forest: () => import('./forest/ForestProductionScene'), tree: () => import('./tree/TreeScene'),
   room: () => import('./room/RoomScene'), light: () => import('./light/LightScene'),
 } as const
 const prepared = new Map<ChapterId, Promise<unknown>>()
