@@ -1,24 +1,43 @@
-import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef, type RefObject } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import type { LightFrame } from './light.types'
 import type { NormalizedPointer } from '../../systems/camera/camera.types'
+import { createWorkedWoodTexture, WOOD_CONTINUITY } from '../materialContinuity'
 
 type Props = { frame: LightFrame; reduced: boolean; pointer: RefObject<NormalizedPointer> }
 const seededRandom = (seed: number) => { let value = seed; return () => ((value = value * 16807 % 2147483647) - 1) / 2147483646 }
 
-function surfaceTexture(kind: 'wood' | 'wall' | 'paper') {
-  const size = 128, random = seededRandom(kind === 'wood' ? 417 : kind === 'wall' ? 631 : 947), data = new Uint8Array(size * size * 4)
+function surfaceTexture(kind: 'wall' | 'paper') {
+  const size = 128, random = seededRandom(kind === 'wall' ? 631 : 947), data = new Uint8Array(size * size * 4)
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const i = (y * size + x) * 4
-    const grain = kind === 'wood' ? Math.sin(y * .35 + Math.sin(x * .045) * 2.2) * 20 + Math.sin(y * .08) * 9 : kind === 'wall' ? Math.sin(x * .13) * Math.sin(y * .11) * 11 : Math.sin(y * .55 + x * .025) * 5
-    const base = kind === 'wood' ? 124 : kind === 'wall' ? 172 : 206
+    const grain = kind === 'wall' ? Math.sin(x * .13) * Math.sin(y * .11) * 11 : Math.sin(y * .55 + x * .025) * 5
+    const base = kind === 'wall' ? 172 : 206
     const value = THREE.MathUtils.clamp(base + grain + (random() - .5) * (kind === 'paper' ? 12 : 22), 36, 235)
     data.set([value, value, value, 255], i)
   }
   const map = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
-  map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(kind === 'wood' ? 1.4 : 4, kind === 'wood' ? 7 : 3); map.anisotropy = 4; map.needsUpdate = true
+  map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(4, 3); map.anisotropy = 4; map.needsUpdate = true
   return map
+}
+
+function cloneWoodTexture(source: THREE.Texture, repeat: [number, number], offset: [number, number], rotation = 0) {
+  const map = source.clone()
+  map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(...repeat); map.offset.set(...offset); map.rotation = rotation
+  map.center.set(.5, .5); map.needsUpdate = true
+  return map
+}
+
+function curtainGeometry(width = .92, height = 2.78) {
+  const geometry = new THREE.PlaneGeometry(width, height, 18, 7), position = geometry.attributes.position
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i), y = position.getY(i), falloff = THREE.MathUtils.smoothstep((y + height / 2) / height, 0, 1)
+    position.setZ(i, Math.sin((x / width + .5) * Math.PI * 7) * (.035 + falloff * .025) + Math.sin(y * 1.7) * .008)
+    position.setX(i, x * (1 - falloff * .05))
+  }
+  position.needsUpdate = true; geometry.computeVertexNormals()
+  return geometry
 }
 
 function ExistingMedia({ frame, paperMap }: { frame: LightFrame; paperMap: THREE.Texture }) {
@@ -47,45 +66,59 @@ function ExistingMedia({ frame, paperMap }: { frame: LightFrame; paperMap: THREE
 
 function LightWorld({ frame, reduced, pointer }: Props) {
   const curtain = useRef<THREE.Mesh>(null), dust = useRef<THREE.Points>(null)
-  const maps = useMemo(() => ({ wood: surfaceTexture('wood'), wall: surfaceTexture('wall'), paper: surfaceTexture('paper') }), [])
-  const dustPositions = useMemo(() => { const random = seededRandom(719); return new Float32Array(Array.from({ length: reduced ? 24 : 52 }, () => [(random() - .5) * 5.2, random() * 3.3 - .25, (random() - .5) * 3.2]).flat()) }, [reduced])
-  useFrame(({ camera, clock }, dt) => {
-    const px = reduced ? 0 : pointer.current.x * .075
-    const py = reduced ? 0 : pointer.current.y * .04
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, .33 - frame.lookBack * .54 + px, 1.35, dt)
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, 1.7 + frame.lookBack * .06 + py, 1.35, dt)
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, 5.91 + frame.lookBack * .14, 1.35, dt)
-    camera.lookAt(.04 - frame.lookBack * .58, .92 + frame.lookBack * .16, -.32)
+  const viewportSize = useThree(state => state.size)
+  const portrait = viewportSize.width / Math.max(viewportSize.height, 1) < .75
+  const maps = useMemo(() => {
+    const source = createWorkedWoodTexture()
+    return { source, table: cloneWoodTexture(source, [1.15, 5.6], [.09, .17]), floor: cloneWoodTexture(source, [2.8, 3.1], [.31, .08], Math.PI / 2), chair: cloneWoodTexture(source, [1.8, 8.2], [.57, .23]), window: cloneWoodTexture(source, [2.2, 6.4], [.73, .36]), wall: surfaceTexture('wall'), paper: surfaceTexture('paper') }
+  }, [])
+  const curtainShape = useMemo(curtainGeometry, [])
+  useEffect(() => () => { Object.values(maps).forEach(map => map.dispose()); curtainShape.dispose() }, [maps, curtainShape])
+  const dustPositions = useMemo(() => { const random = seededRandom(719); return new Float32Array(Array.from({ length: reduced ? 18 : 38 }, () => [(random() - .5) * 5.2, random() * 3.3 - .25, (random() - .5) * 3.2]).flat()) }, [reduced])
+  useFrame(({ camera, clock, size }, dt) => {
+    const portraitFrame = size.width / Math.max(size.height, 1) < .75
+    const px = reduced ? 0 : pointer.current.x * .06, py = reduced ? 0 : pointer.current.y * .035
+    const baseX = portraitFrame ? .05 : .18, distance = portraitFrame ? 8.2 : 6.35
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, baseX - frame.lookBack * (portraitFrame ? .18 : .42) + px, 1.35, dt)
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, (portraitFrame ? 1.62 : 1.7) + frame.lookBack * .035 + py, 1.35, dt)
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, distance - .44 + frame.lookBack * .09, 1.35, dt)
+    camera.lookAt(.04 - frame.lookBack * (portraitFrame ? .14 : .38), .92 + frame.lookBack * .1, -.32)
     if (curtain.current && !reduced) curtain.current.rotation.y = -.08 + Math.sin(clock.elapsedTime * .28) * .014 * frame.curtainDrift
     if (dust.current && !reduced) dust.current.rotation.y = Math.sin(clock.elapsedTime * .06) * .025
   })
-  const woodColor = new THREE.Color('#6d5037').lerp(new THREE.Color('#76583d'), frame.lightMaturity * .35)
+  const maturity = frame.lightMaturity
+  const woodColor = new THREE.Color(WOOD_CONTINUITY.roomWoodTarget).lerp(new THREE.Color('#806244'), maturity * .28)
   return <>
-    <fog attach="fog" args={['#4d4238', 6.3 + frame.lightMaturity * .35, 12.5 + frame.lightMaturity * .8]} />
-    <hemisphereLight args={['#a99d88', '#30251e', .3 + frame.lightMaturity * .08]} />
-    <directionalLight position={[-4.5, 4.8, 4]} intensity={1.35 * frame.naturalLight} color="#d2a46d" />
-    <pointLight position={[2.15, 2.55, .2]} intensity={frame.artificialLight * .78} distance={5.2} color="#d59b59" />
-    <mesh position={[0, -.72, -1]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[12, 10]} /><meshStandardMaterial color={woodColor} map={maps.wood} bumpMap={maps.wood} bumpScale={.018 + frame.lightMaturity * .008} roughness={.97 - frame.lightMaturity * .03} /></mesh>
+    <fog attach="fog" args={[new THREE.Color('#45423f').lerp(new THREE.Color('#56504a'), maturity * .38), 6.4 + maturity * .25, 12.8 + maturity * .55]} />
+    <hemisphereLight args={[new THREE.Color('#82909a').lerp(new THREE.Color('#b2b0a3'), maturity * .46), '#342820', .38 + maturity * .18]} />
+    <ambientLight intensity={maturity * .22} color="#c8c0aa" />
+    <directionalLight position={[-4.5, 4.8, 4]} intensity={(1.18 + maturity * .14) * frame.naturalLight} color={new THREE.Color('#9fb3c2').lerp(new THREE.Color('#c7c2aa'), maturity * .34)} />
+    <pointLight position={[2.15, 2.55, .2]} intensity={frame.artificialLight * (.7 + maturity * .24)} distance={5.4} color={new THREE.Color('#d49a5e').lerp(new THREE.Color('#dfb879'), maturity * .3)} />
+    <mesh position={[0, -.72, -1]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[12, 10]} /><meshStandardMaterial color={new THREE.Color('#463529').lerp(new THREE.Color('#544130'), maturity * .25)} map={maps.floor} bumpMap={maps.floor} bumpScale={.016} roughness={.91 - maturity * .02} /></mesh>
     {[...Array(10)].map((_, i) => <mesh key={i} position={[-4.95 + i * 1.1, -.708, -1]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[.012, 9.8]} /><meshBasicMaterial color="#241c17" transparent opacity={.2 + frame.lightMaturity * .05} /></mesh>)}
     <mesh position={[0, 2.25, -2.55]}><planeGeometry args={[9, 6]} /><meshStandardMaterial color={new THREE.Color('#62584c').lerp(new THREE.Color('#6a6052'), frame.lightMaturity * .3)} map={maps.wall} bumpMap={maps.wall} bumpScale={.012 + frame.lightMaturity * .007} roughness={1} /></mesh>
-    <mesh position={[-3.18, 1.55, -2.48]}><planeGeometry args={[1.8, 2.85]} /><meshBasicMaterial color="#948875" /></mesh>
-    <mesh position={[-3.18, 1.55, -2.42]}><planeGeometry args={[1.48, 2.5]} /><meshBasicMaterial color={new THREE.Color('#b27e52').lerp(new THREE.Color('#a99370'), frame.outsideConnection * .52)} toneMapped={false} /></mesh>
-    <mesh position={[-3.18, 1.52, -2.405]}><planeGeometry args={[1.27, 2.24]} /><meshBasicMaterial color="#6f6958" transparent opacity={frame.outsideConnection * .16} toneMapped={false} /></mesh>
-    {[...Array(5)].map((_, i) => <mesh key={i} position={[-3.7 + i * .26, .68 + (i % 2) * .1, -2.39]} rotation={[0, 0, -.2 + i * .09]}><circleGeometry args={[.12 + (i % 2) * .045, 8]} /><meshBasicMaterial color={i % 2 ? '#756947' : '#665b40'} transparent opacity={frame.outsideConnection * .3} toneMapped={false} /></mesh>)}
-    <mesh ref={curtain} position={[-2.25, 1.55, -2.26]}><planeGeometry args={[.72, 2.75, 10, 1]} /><meshStandardMaterial color="#847a68" transparent opacity={.76} roughness={1} side={THREE.DoubleSide} /></mesh>
-    <mesh position={[0, -.03, .2]}><boxGeometry args={[4.35, .16, 1.5]} /><meshStandardMaterial color={woodColor} map={maps.wood} bumpMap={maps.wood} bumpScale={.02 + frame.lightMaturity * .01} roughness={.94 - frame.lightMaturity * .04} /></mesh>
-    <mesh position={[-1.8, -.44, .2]}><boxGeometry args={[.15, .75, 1.25]} /><meshStandardMaterial color="#49372a" roughness={1} /></mesh>
-    <mesh position={[1.8, -.44, .2]}><boxGeometry args={[.15, .75, 1.25]} /><meshStandardMaterial color="#49372a" roughness={1} /></mesh>
-    <ExistingMedia frame={frame} paperMap={maps.paper} />
-    <group position={[2.25, -.38, 1.2]} rotation={[0, -.34, 0]}>
-      <mesh position={[0, .22, 0]}><boxGeometry args={[.8, .08, .75]} /><meshStandardMaterial color="#594837" roughness={1} /></mesh>
-      {[-.28, .28].map(x => <mesh key={x} position={[x, -.18, 0]}><boxGeometry args={[.07, .75, .07]} /><meshStandardMaterial color="#3e342b" /></mesh>)}
-      <mesh position={[0, .72, .32]} rotation={[-.16, 0, 0]}><boxGeometry args={[.8, .75, .07]} /><meshStandardMaterial color="#5a4938" /></mesh>
+    <group position={[-3.2, 1.55, -2.46]}>
+      <mesh position={[0, 0, -.07]}><boxGeometry args={[2.05, 3.08, .18]} /><meshStandardMaterial color="#4d4034" map={maps.window} bumpMap={maps.window} bumpScale={.014} roughness={.8} /></mesh>
+      <mesh position={[0, 0, .04]}><boxGeometry args={[1.68, 2.7, .12]} /><meshPhysicalMaterial color={new THREE.Color('#778997').lerp(new THREE.Color('#94a0a0'), frame.outsideConnection * .24)} roughness={.2} transmission={.12} transparent opacity={.78} /></mesh>
+      <mesh position={[0, 0, .12]}><boxGeometry args={[.09, 2.78, .1]} /><meshStandardMaterial color="#59493a" map={maps.window} roughness={.82} /></mesh>
+      <mesh position={[0, 0, .13]}><boxGeometry args={[1.76, .09, .1]} /><meshStandardMaterial color="#59493a" map={maps.window} roughness={.82} /></mesh>
+      <mesh position={[0, -1.49, .14]}><boxGeometry args={[2.15, .18, .38]} /><meshStandardMaterial color="#66503d" map={maps.window} roughness={.76} /></mesh>
     </group>
-    <points ref={dust}><bufferGeometry><bufferAttribute attach="attributes-position" args={[dustPositions, 3]} /></bufferGeometry><pointsMaterial color="#dfc99e" size={.018} transparent opacity={.07 + frame.lightMaturity * .045} depthWrite={false} /></points>
+    <mesh ref={curtain} geometry={curtainShape} position={[-2.23, 1.54, -2.2]}><meshStandardMaterial color={new THREE.Color('#777164').lerp(new THREE.Color('#817d70'), maturity * .18)} roughness={.72} side={THREE.DoubleSide} /></mesh>
+    <mesh position={[-2.18, 1.54, -2.235]} scale={[1.05, 1, 1]} geometry={curtainShape}><meshStandardMaterial color="#55514a" transparent opacity={.38} roughness={.88} side={THREE.BackSide} /></mesh>
+    <mesh position={[0, -.03, .2]}><boxGeometry args={[4.35, .16, 1.5]} /><meshStandardMaterial color={woodColor} map={maps.table} bumpMap={maps.table} bumpScale={.019} roughness={.72 - maturity * .05} /></mesh>
+    {[-1.78, 1.78].flatMap(x => [-.42, .73].map(z => <mesh key={`${x}-${z}`} position={[x, -.44, z]}><cylinderGeometry args={[.075, .095, .75, 8]} /><meshStandardMaterial color="#49372a" map={maps.table} roughness={.86} /></mesh>))}
+    <group position={portrait ? [.55, 0, 0] : [0, 0, 0]}><ExistingMedia frame={frame} paperMap={maps.paper} /></group>
+    <group position={[2.25, -.38, 1.2]} rotation={[0, -.34, 0]}>
+      <mesh position={[0, .22, 0]}><boxGeometry args={[.8, .08, .75]} /><meshStandardMaterial color="#594837" map={maps.chair} bumpMap={maps.chair} bumpScale={.014} roughness={.9} /></mesh>
+      {[-.28, .28].flatMap(x => [-.27, .27].map(z => <mesh key={`${x}-${z}`} position={[x, -.18, z]} rotation={[x * .045, 0, z * .05]}><cylinderGeometry args={[.032, .048, .75, 8]} /><meshStandardMaterial color="#3e342b" map={maps.chair} roughness={.9} /></mesh>))}
+      {[-.28, .28].map(x => <mesh key={x} position={[x, .72, .32]} rotation={[-.1, 0, x * .035]}><cylinderGeometry args={[.035, .045, 1.02, 8]} /><meshStandardMaterial color="#5a4938" map={maps.chair} roughness={.88} /></mesh>)}
+      {[.48, .68, .87].map((y, i) => <mesh key={y} position={[0, y, .34]} rotation={[-.12, 0, 0]}><boxGeometry args={[.72 - i * .045, .1, .055]} /><meshStandardMaterial color="#5a4938" map={maps.chair} roughness={.88} /></mesh>)}
+    </group>
+    <points ref={dust}><bufferGeometry><bufferAttribute attach="attributes-position" args={[dustPositions, 3]} /></bufferGeometry><pointsMaterial color="#dfc99e" size={.016} transparent opacity={.055 + maturity * .02} depthWrite={false} /></points>
   </>
 }
 
 export default function LightScene(props: Props) {
-  return <><color attach="background" args={['#4d4238']} /><LightWorld {...props} /></>
+  return <><color attach="background" args={[new THREE.Color('#4b4137').lerp(new THREE.Color('#554b41'), props.frame.lightMaturity * .35)]} /><LightWorld {...props} /></>
 }

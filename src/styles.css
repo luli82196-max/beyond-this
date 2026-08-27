@@ -79,18 +79,19 @@ button { color: inherit; font: inherit; }
 .book-note { left: 22%; bottom: 18%; }
 .projection-note { left: 50%; top: 27%; transform: translateX(-50%); }
 .interface-note { right: 16%; bottom: 22%; }
-.light-experience { background: #4d4238; transition: opacity .12s linear; }
+.light-experience { background: #4b4137; transition: opacity .12s linear; }
 .light-scene canvas { filter: saturate(.7) contrast(1.035) brightness(.98); }
-.light-room-continuity { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(112deg, rgba(216,166,105,.08), transparent 36%), rgba(35,25,19,.2); backdrop-filter: blur(2px); }
-.light-breath { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 58% 46%, rgba(224,185,126,.1), transparent 54%), linear-gradient(110deg, rgba(211,174,121,.06), transparent 46%); mix-blend-mode: screen; }
-.light-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 48% 48%, transparent 25%, rgba(27,19,13,.08) 68%, rgba(10,7,4,.54) 116%), linear-gradient(90deg, rgba(16,10,7,.2), transparent 34% 74%, rgba(16,10,7,.22)); }
+.light-scene .grain { opacity: .014; }
+.light-room-continuity { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(108deg, rgba(159,179,194,.07), transparent 34%), rgba(32,25,21,.12); backdrop-filter: blur(1.5px); }
+.light-breath { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 58% 46%, rgba(228,207,165,.08), transparent 54%), linear-gradient(110deg, rgba(211,192,154,.045), transparent 46%); mix-blend-mode: screen; }
+.light-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 48% 48%, transparent 28%, rgba(27,22,18,.055) 70%, rgba(10,8,7,.42) 118%), linear-gradient(90deg, rgba(15,12,10,.14), transparent 34% 74%, rgba(15,12,10,.16)); }
 .light-controls { color: rgba(242,226,201,.7); text-shadow: 0 1px 18px rgba(20,13,9,.75); }
 .light-title { position: absolute; z-index: 3; left: clamp(28px, 9vw, 148px); bottom: 19%; pointer-events: none; color: rgba(246,231,209,.92); text-shadow: 0 2px 28px rgba(17,11,7,.72); transition: opacity .1s linear, transform .1s linear; }
 .light-title p { margin: 0 0 15px; font-family: "Noto Serif SC", serif; font-size: clamp(23px, 2.4vw, 38px); font-weight: 300; letter-spacing: .12em; }
 .light-title small { color: rgba(241,220,190,.58); font-size: clamp(9px, .76vw, 11px); letter-spacing: .11em; }
-.experience-complete { position: absolute; z-index: 5; right: clamp(28px, 7vw, 112px); bottom: clamp(28px, 7vh, 72px); width: min(330px, calc(100% - 56px)); color: rgba(242,226,202,.72); text-align: right; transition: opacity .2s linear; }
+.experience-complete { position: absolute; z-index: 5; right: clamp(28px, 7vw, 112px); bottom: clamp(28px, 7vh, 72px); width: min(310px, calc(100% - 56px)); color: rgba(242,226,202,.62); text-align: right; transition: opacity .2s linear; }
 .experience-complete > p { margin: 0 0 8px; font-family: "Noto Serif SC", serif; font-size: 12px; letter-spacing: .18em; }
-.experience-complete > small { display: block; color: rgba(233,211,182,.43); font-size: 8px; line-height: 1.6; letter-spacing: .16em; }
+.experience-complete > small { display: block; color: rgba(233,211,182,.34); font-size: 8px; line-height: 1.6; letter-spacing: .16em; }
 .experience-complete details { margin-top: 20px; pointer-events: auto; }
 .experience-complete summary { display: inline-block; padding: 6px 0; cursor: pointer; font-size: 9px; letter-spacing: .18em; list-style: none; }
 .experience-complete summary::-webkit-details-marker { display: none; }
@@ -110,6 +111,7 @@ button { color: inherit; font: inherit; }
 @media (max-width: 720px) { .tree-title { left: max(28px, env(safe-area-inset-left)); right: max(28px, env(safe-area-inset-right)); bottom: 17%; } }
 @media (max-width: 720px) { .room-title { left: max(28px, env(safe-area-inset-left)); right: max(28px, env(safe-area-inset-right)); bottom: 17%; } .room-medium-notes span { display: none; } }
 @media (max-width: 720px) { .light-title { left: max(28px, env(safe-area-inset-left)); right: max(28px, env(safe-area-inset-right)); bottom: 17%; } }
-@media (max-width: 720px) { .first-visit { left: max(28px, env(safe-area-inset-left)); top: 47%; width: auto; right: max(28px, env(safe-area-inset-right)); } .first-visit-positioning { margin-top: 28px; } .experience-complete { right: max(28px, env(safe-area-inset-right)); bottom: max(28px, env(safe-area-inset-bottom)); } }
+@media (max-width: 720px) { .first-visit { left: max(28px, env(safe-area-inset-left)); top: 47%; width: auto; right: max(28px, env(safe-area-inset-right)); } .first-visit-positioning { margin-top: 28px; } .experience-complete { right: max(24px, env(safe-area-inset-right)); bottom: max(22px, env(safe-area-inset-bottom)); width: min(260px, calc(100% - 48px)); } .experience-complete > p { font-size: 10px; } .experience-complete details { margin-top: 12px; } }
 @media (prefers-reduced-motion: reduce) { .grain, .continue i, .first-visit.is-loading .first-visit-status { animation: none; } .experience, .title { transition-duration: .01ms; } }
 @media (prefers-reduced-motion: reduce) { .scene canvas { filter: none; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .light-scene canvas { filter: saturate(.7) contrast(1.035) brightness(.98); } }
