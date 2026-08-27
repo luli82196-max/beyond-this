@@ -4,8 +4,8 @@ import type { ChapterAudioController } from './audio.types'
 type CueSource = { src: string | null; loop: boolean; volume: number }
 
 export const forestAudioSources: Record<ForestAudioCue, CueSource> = {
-  wind: { src: null, loop: true, volume: .18 },
-  leaves: { src: null, loop: true, volume: .12 },
+  wind: { src: '/audio/forest/forest-ambience-loop-v1.ogg', loop: true, volume: .16 },
+  leaves: { src: '/audio/forest/autumn-leaves-loop-v1.ogg', loop: true, volume: .035 },
   distant_nature: { src: null, loop: true, volume: .08 },
 }
 

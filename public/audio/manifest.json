@@ -1,0 +1,50 @@
+{
+  "version": "mvp-03.5",
+  "generatedAt": "2026-08-27",
+  "assets": [
+    {
+      "id": "forest-bed",
+      "path": "/audio/forest/forest-ambience-loop-v1.ogg",
+      "sourceAsset": "20090610 0 ambience.ogg",
+      "sourceSha256": "43848c3eda5f42829f1033112c2a91ba3e5c91b79a0532fda264c9f59856d431",
+      "derivativeSha256": "6d888851dd76af1df1855d86d52187856403783e268e477d2187c019142c6c76",
+      "author": "nille",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:20090610_0_ambience.ogg",
+      "processing": "Source 20-100 s; circular edit begins at 22 s; 98-100 s crossfaded into 20-22 s over 2 s; -4 dB gain; 48 kHz stereo Vorbis q4.",
+      "durationSeconds": 78.0,
+      "sampleRateHz": 48000,
+      "channels": 2,
+      "codec": "Vorbis",
+      "integratedLufs": -26.7,
+      "truePeakDbfs": -5.1,
+      "samplePeakDbfs": -5.13,
+      "rmsDbfs": -29.73,
+      "dcOffset": 0.000045,
+      "loopCrossfadeSeconds": 2,
+      "bytes": 1916409
+    },
+    {
+      "id": "forest-leaves",
+      "path": "/audio/forest/autumn-leaves-loop-v1.ogg",
+      "sourceAsset": "Leaves falling from the trees during autumn in the forest.wav",
+      "sourceSha256": "858d8965c77ec52b975d8d077728e874b79522c4815cbdcd83556447d66e508a",
+      "derivativeSha256": "f1d7d91c120238ab12007a710eda7b2bdffd68371c5a5fc40e76ef2702d0ea4a",
+      "author": "Wilfredor",
+      "license": "CC0 1.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Leaves_falling_from_the_trees_during_autumn_in_the_forest.wav",
+      "processing": "Source 30-110 s; circular edit begins at 33 s; 107-110 s crossfaded into 30-33 s over 3 s; -7 dB gain; resampled to 48 kHz stereo; Vorbis q4.",
+      "durationSeconds": 76.99925,
+      "sampleRateHz": 48000,
+      "channels": 2,
+      "codec": "Vorbis",
+      "integratedLufs": -38.1,
+      "truePeakDbfs": -7.8,
+      "samplePeakDbfs": -7.79,
+      "rmsDbfs": -27.78,
+      "dcOffset": -0.000012,
+      "loopCrossfadeSeconds": 3,
+      "bytes": 1154371
+    }
+  ]
+}

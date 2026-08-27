@@ -11,13 +11,13 @@ export function useExperienceAudio(overallProgress: number, muted: boolean) {
   useEffect(() => {
     director.setMuted(muted)
     if (!muted) director.unlockFromUserGesture()
-    director.update(weights)
+    director.update(weights, 1 / 60, overallProgress)
   }, [director, muted, overallProgress])
 
   useEffect(() => {
     if (!audioAvailable) return
     let frame = 0; let previous = performance.now()
-    const tick = (now: number) => { director.update(resolveChapterWeights(overallProgress), Math.min(.05, (now - previous) / 1000)); previous = now; frame = requestAnimationFrame(tick) }
+    const tick = (now: number) => { director.update(resolveChapterWeights(overallProgress), Math.min(.05, (now - previous) / 1000), overallProgress, now); previous = now; frame = requestAnimationFrame(tick) }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
   }, [director, overallProgress])
@@ -25,14 +25,14 @@ export function useExperienceAudio(overallProgress: number, muted: boolean) {
   useEffect(() => {
     const unlock = (event: Event) => {
       const nextMuted = (event as CustomEvent<{ muted: boolean }>).detail.muted
-      director.unlockFromUserGesture(); director.setMuted(nextMuted); director.update(resolveChapterWeights(overallProgress))
+      director.unlockFromUserGesture(); director.setMuted(nextMuted); director.update(resolveChapterWeights(overallProgress), 1 / 60, overallProgress)
     }
     document.addEventListener('beyond-audio-user-setting', unlock)
     return () => document.removeEventListener('beyond-audio-user-setting', unlock)
   }, [director, overallProgress])
   useEffect(() => () => director.dispose(), [director])
   useEffect(() => {
-    const visibility = () => { director.setVisible(document.visibilityState === 'visible'); director.update(resolveChapterWeights(overallProgress)) }
+    const visibility = () => { director.setVisible(document.visibilityState === 'visible'); director.update(resolveChapterWeights(overallProgress), 1 / 60, overallProgress) }
     document.addEventListener('visibilitychange', visibility)
     return () => document.removeEventListener('visibilitychange', visibility)
   }, [director, overallProgress])
