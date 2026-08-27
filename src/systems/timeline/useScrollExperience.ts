@@ -6,10 +6,20 @@ type Options = Pick<ExperienceState, 'overallProgress'> & { setOverallProgress: 
 export function useScrollExperience({ overallProgress, setOverallProgress }: Options) {
   const progress = useRef(overallProgress)
   const touchY = useRef<number | null>(null)
+  const boundaryGuard = useRef<{ boundary: number | null; at: number }>({ boundary: null, at: 0 })
   useEffect(() => { progress.current = overallProgress }, [overallProgress])
   useEffect(() => {
     const move = (delta: number) => {
-      progress.current = Math.min(1, Math.max(0, progress.current + delta))
+      const proposed = progress.current + delta
+      const boundary = [.65, .9].find(value => (progress.current <= value && proposed > value) || (progress.current >= value && proposed < value))
+      const now = performance.now()
+      if (boundary && (boundaryGuard.current.boundary !== boundary || now - boundaryGuard.current.at <= 180)) {
+        if (boundaryGuard.current.boundary !== boundary) boundaryGuard.current = { boundary, at: now }
+        progress.current = boundary
+      } else {
+        progress.current = Math.min(1, Math.max(0, proposed))
+        if (!boundary || now - boundaryGuard.current.at > 180) boundaryGuard.current = { boundary: null, at: 0 }
+      }
       setOverallProgress(progress.current)
     }
     const wheel = (event: WheelEvent) => { event.preventDefault(); move(event.deltaY * .00045) }

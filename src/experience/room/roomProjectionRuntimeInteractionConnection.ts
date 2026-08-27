@@ -24,6 +24,7 @@ export interface RoomProjectionRuntimeInteractionConnection {
   readonly close: (input?: RoomInteractionEvent['input']) => RoomProjectionRuntimeOutput | null
   readonly switchSurface: (surface: Exclude<RoomSurface, 'projection'>) => RoomProjectionRuntimeOutput | null
   readonly handleKeyboard: (key: string) => RoomProjectionRuntimeOutput | null
+  readonly setPageVisible: (visible: boolean) => RoomProjectionRuntimeOutput | null
   readonly getOutput: () => RoomProjectionRuntimeOutput | null
   readonly getMediaElement: () => MediaElementLike | null
   readonly getOwnership: () => ProjectionRuntimeOwnership
@@ -44,6 +45,8 @@ export function createRoomProjectionRuntimeInteractionConnection(
   let connectionCycle = 0
   let output: RoomProjectionRuntimeOutput | null = null
   let lastPrepareIntent: MediaIntent | null = null
+  let openState = false
+  let pageVisible = true
   let unsubscribePresentation: (() => void) | null = null
   let unsubscribeOrchestration: (() => void) | null = null
   let unsubscribeMediaRuntime: (() => void) | null = null
@@ -75,6 +78,7 @@ export function createRoomProjectionRuntimeInteractionConnection(
 
   const open = (input: RoomInteractionEvent['input'] = 'pointer') => {
     if (!connected) return output
+    openState = true
     focus(input)
     dispatch(input === 'keyboard' ? 'keyboard' : 'pointer', input === 'keyboard' ? 'confirm' : 'primary')
     const next = publish()
@@ -88,6 +92,7 @@ export function createRoomProjectionRuntimeInteractionConnection(
 
   const close = (input: RoomInteractionEvent['input'] = 'pointer') => {
     if (!connected) return output
+    openState = false
     dispatch(input === 'keyboard' ? 'keyboard' : 'pointer', input === 'keyboard' ? 'blur' : 'exit')
     lastPrepareIntent = null
     mediaRuntime.release()
@@ -138,6 +143,15 @@ export function createRoomProjectionRuntimeInteractionConnection(
       if (key === 'Enter' || key === ' ') return open('keyboard')
       if (key === 'Escape') return close('keyboard')
       return output
+    },
+    setPageVisible(visible: boolean) {
+      pageVisible = visible
+      if (!visible) { mediaRuntime.release(); return publish() }
+      if (openState && pageVisible) {
+        const asset = output ? getProjectionAsset(output.fragmentId) : null
+        if (asset) { mediaRuntime.prepare(asset.source); mediaRuntime.load() }
+      }
+      return publish()
     },
     getOutput: () => output,
     getMediaElement: mediaRuntime.getMediaElement,

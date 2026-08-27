@@ -75,6 +75,13 @@ assert(runtime.getOutput()?.mediaRuntime.lifecycle === 'playing', 'open must pre
 assert(runtime.close() === null, 'close must clean runtime output')
 assert(connectionMedia.getSnapshot().lifecycle === 'released' && connectionMedia.getMediaElement() === null, 'close must release media ownership')
 assert(runtime.open()?.lifecycle === 'open', 'reopen must return to deterministic open state')
+const visibleCycle = connectionMedia.getSnapshot().ownershipCycle
+runtime.setPageVisible(false)
+assert(connectionMedia.getSnapshot().lifecycle === 'released' && connectionMedia.getMediaElement() === null, 'hidden pages must release Projection media')
+runtime.setPageVisible(true)
+await Promise.resolve()
+assert(connectionMedia.getSnapshot().ownershipCycle === visibleCycle + 1, 'visible open Projection must restore exactly one ownership cycle')
+assert(connectionMedia.getSnapshot().lifecycle === 'playing', 'visible open Projection must resume through the existing runtime')
 assert(runtime.switchSurface('interface') === null, 'surface switch must release Projection output')
 assert(connectionMedia.getSnapshot().lifecycle === 'released', 'surface switch must clean media runtime state')
 assert(runtime.getOutput() === null, 'surface switch cleanup must persist')

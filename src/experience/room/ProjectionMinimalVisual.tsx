@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { RoomProjectionRuntimeOutput } from './roomProjectionRuntimeOutput'
 import type { MediaElementLike } from '../../content'
@@ -23,12 +24,17 @@ function createIdentityTexture(output: RoomProjectionRuntimeOutput): THREE.Canva
 
 /** Displays Projection identity only; it owns no media source or playback object. */
 export default function ProjectionMinimalVisual({ output, attention, mediaElement }: { output: RoomProjectionRuntimeOutput; attention: number; mediaElement: MediaElementLike | null }) {
+  const material = useRef<THREE.MeshBasicMaterial>(null)
   const texture = useMemo(() => createIdentityTexture(output), [output])
   useEffect(() => () => texture.dispose(), [texture])
   const videoTexture = useMemo(() => mediaElement instanceof HTMLVideoElement ? new THREE.VideoTexture(mediaElement) : null, [mediaElement])
   useEffect(() => () => videoTexture?.dispose(), [videoTexture])
+  const showVideo = Boolean(videoTexture && output.mediaRuntime.lifecycle === 'playing' && !output.mediaRuntime.fallback)
+  useFrame((_, delta) => {
+    if (material.current) material.current.opacity = THREE.MathUtils.damp(material.current.opacity, showVideo ? .74 : .54, 7, delta)
+  })
   return <mesh position={[0, 0, .014]}>
     <planeGeometry args={[2.18, 1.18]} />
-    <meshBasicMaterial map={videoTexture ?? texture} transparent opacity={.46 + attention * .28} toneMapped={false} />
+    <meshBasicMaterial ref={material} map={showVideo ? videoTexture : texture} transparent opacity={.46 + attention * .08} toneMapped={false} />
   </mesh>
 }

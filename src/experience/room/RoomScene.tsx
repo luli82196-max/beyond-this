@@ -13,6 +13,7 @@ import { createRoomProjectionRuntimeInteractionConnection } from './roomProjecti
 import type { RoomProjectionRuntimeOutput } from './roomProjectionRuntimeOutput'
 import type { MediaElementLike } from '../../content'
 import { createWorkedWoodTexture, WOOD_CONTINUITY } from '../materialContinuity'
+import { roomInteractionSession, useRoomInteractionSession } from './roomInteractionSession'
 
 type Props = { frame: RoomFrame; reduced: boolean; pointer: RefObject<NormalizedPointer> }
 const seededRandom = (seed: number) => { let value = seed; return () => ((value = value * 16807 % 2147483647) - 1) / 2147483646 }
@@ -117,7 +118,7 @@ function Projection({ attention, output, mediaElement }: { attention: number; ou
 
 function RoomWorld({ frame, reduced, pointer }: Props) {
   const curtain = useRef<THREE.Mesh>(null), dust = useRef<THREE.Points>(null)
-  const activeSurface = useRef<'book' | 'process' | 'projection' | null>(null)
+  const session = useRoomInteractionSession()
   const maps = useMemo(() => {
     const source = createWorkedWoodTexture()
     return { source, table: cloneWoodTexture(source, [1.15, 5.6], [.09, .17]), floor: cloneWoodTexture(source, [2.8, 3.1], [.31, .08], Math.PI / 2), chair: cloneWoodTexture(source, [1.8, 8.2], [.57, .23]), window: cloneWoodTexture(source, [2.2, 6.4], [.73, .36]), worn: cloneWoodTexture(source, [1.6, 6.8], [.42, .61]), wall: surfaceTexture('wall'), paper: surfaceTexture('paper') }
@@ -141,21 +142,20 @@ function RoomWorld({ frame, reduced, pointer }: Props) {
     projectionRuntime.connect()
     const closeAll = () => {
       bookRuntime.close(); processRuntime.close(); projectionRuntime.close()
-      activeSurface.current = null
     }
     const keyboard = (event: KeyboardEvent) => {
-      if (!['Enter', ' ', 'Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
-      const active = activeSurface.current
-      if (!active && !['Enter', ' '].includes(event.key)) return
+      if (!['Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
+      const active = roomInteractionSession.getSnapshot().activeSurface
+      if (!active) return
       event.preventDefault(); event.stopImmediatePropagation()
       if (active === 'projection') projectionRuntime.handleKeyboard(event.key)
       else if (active === 'process') processRuntime.handleKeyboard(event.key)
       else bookRuntime.handleKeyboard(event.key)
-      if (event.key === 'Escape') activeSurface.current = null
-      else if (!active) activeSurface.current = 'book'
+      if (event.key === 'Escape') roomInteractionSession.close()
     }
     const holdChapter = (event: WheelEvent | TouchEvent) => {
-      if (!activeSurface.current) return
+      const current = roomInteractionSession.getSnapshot()
+      if (!current.activeSurface && performance.now() >= current.scrollGuardUntil) return
       event.preventDefault(); event.stopImmediatePropagation()
     }
     window.addEventListener('keydown', keyboard, true)
@@ -170,6 +170,17 @@ function RoomWorld({ frame, reduced, pointer }: Props) {
       bookRuntime.disconnect(); processRuntime.disconnect(); projectionRuntime.disconnect()
     }
   }, [bookRuntime, processRuntime, projectionRuntime])
+  useEffect(() => {
+    bookRuntime.close(); processRuntime.close(); projectionRuntime.close()
+    if (session.activeSurface === 'book') bookRuntime.open('keyboard')
+    if (session.activeSurface === 'process') processRuntime.open('keyboard')
+    if (session.activeSurface === 'projection') projectionRuntime.open('keyboard')
+  }, [bookRuntime, processRuntime, projectionRuntime, session.activeSurface])
+  useEffect(() => {
+    const visibility = () => projectionRuntime.setPageVisible(document.visibilityState === 'visible')
+    document.addEventListener('visibilitychange', visibility)
+    return () => document.removeEventListener('visibilitychange', visibility)
+  }, [projectionRuntime])
   const dustPositions = useMemo(() => { const random = seededRandom(719); return new Float32Array(Array.from({ length: reduced ? 24 : 52 }, () => [(random() - .5) * 5.2, random() * 3.3 - .25, (random() - .5) * 3.2]).flat()) }, [reduced])
   useFrame(({ camera, clock, size }, dt) => {
     const px = reduced ? 0 : pointer.current.x * .1, py = reduced ? 0 : pointer.current.y * .045
@@ -197,23 +208,23 @@ function RoomWorld({ frame, reduced, pointer }: Props) {
     <mesh position={[-2.18, 1.54, -2.235]} scale={[1.05, 1, 1]} geometry={curtainShape}><meshStandardMaterial color="#55514a" transparent opacity={.38} roughness={.88} side={THREE.BackSide} /></mesh>
     <Table maps={{ table: maps.table, worn: maps.worn }} />
     <Dressing paperMap={maps.paper} />
-    <group position={portrait ? [.55, 0, 0] : [0, 0, 0]} onPointerEnter={() => { processRuntime.close(); projectionRuntime.close(); bookRuntime.open(); activeSurface.current = 'book' }} onPointerLeave={() => { bookRuntime.close(); activeSurface.current = null }} onClick={(event) => { event.stopPropagation(); processRuntime.close(); projectionRuntime.close(); bookRuntime.open(); activeSurface.current = 'book' }}>
+    <group position={portrait ? [.55, 0, 0] : [0, 0, 0]} onPointerEnter={() => roomInteractionSession.hover('book')} onPointerLeave={() => roomInteractionSession.hover(null)} onClick={(event) => { event.stopPropagation(); roomInteractionSession.open('book') }}>
       <mesh position={[-1.28, .18, .37]}><boxGeometry args={[1.45, .3, 1]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} /></mesh>
       {bookVisual && <BookMinimalVisual visual={bookVisual} attention={frame.bookAttention} paperMap={maps.paper} />}
     </group>
     <group
       position={portrait ? [-.55, 0, 0] : [0, 0, 0]}
-      onPointerEnter={() => { bookRuntime.close(); projectionRuntime.close(); processRuntime.open(); activeSurface.current = 'process' }}
-      onPointerLeave={() => { processRuntime.close(); activeSurface.current = null }}
-      onClick={(event) => { event.stopPropagation(); bookRuntime.close(); projectionRuntime.close(); processRuntime.open(); activeSurface.current = 'process' }}
+      onPointerEnter={() => roomInteractionSession.hover('process')}
+      onPointerLeave={() => roomInteractionSession.hover(null)}
+      onClick={(event) => { event.stopPropagation(); roomInteractionSession.open('process') }}
     >
       <mesh position={[1.42, .57, .2]} rotation={[0, -.1, 0]}><boxGeometry args={[1.18, .82, .12]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} /></mesh>
       <Interface attention={frame.interfaceAttention} visual={processVisual} />
     </group>
     <group
-      onPointerEnter={() => { bookRuntime.close(); processRuntime.close(); projectionRuntime.open(); activeSurface.current = 'projection' }}
-      onPointerLeave={() => { projectionRuntime.close(); activeSurface.current = null }}
-      onClick={(event) => { event.stopPropagation(); bookRuntime.close(); processRuntime.close(); projectionRuntime.open(); activeSurface.current = 'projection' }}
+      onPointerEnter={() => roomInteractionSession.hover('projection')}
+      onPointerLeave={() => roomInteractionSession.hover(null)}
+      onClick={(event) => { event.stopPropagation(); roomInteractionSession.open('projection') }}
     >
       <mesh position={[0, 1.62, -2.46]}><boxGeometry args={[2.6, 1.55, .12]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} /></mesh>
       <Projection attention={frame.projectionAttention} output={projectionOutput} mediaElement={projectionRuntime.getMediaElement()} />
