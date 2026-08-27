@@ -19,7 +19,10 @@ export class ExperienceAudioRuntime {
     this.worlds = resolveWorldWeights(weights)
     for (const asset of this.manifest) {
       if (asset.kind !== 'ambient' || !asset.src) continue
-      const player = this.playerFor(asset); const target = this.unlocked && !this.muted && this.visible ? asset.baseGain * this.worlds[asset.world] : 0
+      const target = this.unlocked && !this.muted && this.visible ? asset.baseGain * this.worlds[asset.world] : 0
+      const existing = this.players.get(asset.id)
+      if (!existing && target <= .001) continue
+      const player = existing ?? this.playerFor(asset)
       player.volume = ramp(player.volume, target, deltaSeconds / .18)
       if (target > .001 && player.paused) void player.play().catch(() => undefined)
       if ((!this.visible || (target === 0 && player.volume < .001)) && !player.paused) player.pause()

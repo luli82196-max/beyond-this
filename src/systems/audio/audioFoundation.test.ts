@@ -17,7 +17,11 @@ assert.equal(created, 0); assert.equal(silent.getSnapshot().playerCount, 0); ass
 
 const futureManifest = [{ ...audioAssetManifest.find(asset => asset.id === 'room-light-bed')!, src: '/audio/room-light.ogg' }]
 const runtime = new ExperienceAudioRuntime(futureManifest, countedFactory)
+runtime.update({ seed: 1, forest: 0, tree: 0, room: 0, light: 0 }, 1)
+assert.equal(runtime.getSnapshot().playerCount, 0)
 runtime.unlockFromUserGesture(); runtime.setMuted(false)
+runtime.update({ seed: 1, forest: 0, tree: 0, room: 0, light: 0 }, 1)
+assert.equal(runtime.getSnapshot().playerCount, 0)
 runtime.update({ seed: 0, forest: 0, tree: 0, room: 1, light: 0 }, 1)
 runtime.update({ seed: 0, forest: 0, tree: 0, room: 0, light: 1 }, 1)
 assert.equal(runtime.getSnapshot().playerCount, 1)
