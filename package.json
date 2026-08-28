@@ -15,6 +15,8 @@
     "test:phase-mvp-01.4": "vite build --ssr src/experience/room/roomProjectionRuntimeInteractionConnection.test.ts --outDir work/phase-mvp-01.4-media-runtime-test && node work/phase-mvp-01.4-media-runtime-test/roomProjectionRuntimeInteractionConnection.test.js",
     "typecheck": "tsc -b",
     "build": "tsc -b && vite build",
+    "verify:release-config": "node scripts/verify-production.mjs --config-only",
+    "verify:production": "node scripts/verify-production.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
